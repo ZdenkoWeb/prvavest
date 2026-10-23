@@ -1,0 +1,44 @@
+name: Napravi aplikaciju
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  android:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Pripremi Android projekat
+        run: |
+          flutter create --org com.prvavest --project-name prvavest --platforms android .
+          flutter pub add http cached_network_image flutter_widget_from_html_core shared_preferences url_launcher
+          # Dozvola za internet (potrebna da bi aplikacija preuzimala vesti)
+          MANIFEST=android/app/src/main/AndroidManifest.xml
+          grep -q 'android.permission.INTERNET' $MANIFEST || \
+            sed -i 's#<application#<uses-permission android:name="android.permission.INTERNET"/>\n    <application#' $MANIFEST
+          # Ime aplikacije ispod ikonice na telefonu
+          sed -i 's#android:label="prvavest"#android:label="Prva Vest"#' $MANIFEST
+
+      - name: Proveri kod
+        run: flutter analyze --no-fatal-infos --no-fatal-warnings
+
+      - name: Napravi APK
+        run: flutter build apk --release
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: prva-vest-apk
+          path: build/app/outputs/flutter-apk/app-release.apk
+
