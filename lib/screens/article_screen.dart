@@ -316,7 +316,7 @@ class ShareBar extends StatelessWidget {
                   ),
                   _ShareButton(
                     tooltip: 'Pošalji na WhatsApp',
-                    child: Icon(Icons.whatsapp, color: context.ink),
+                    child: const Icon(Icons.chat_outlined, color: Color(0xFF25D366)),
                     onTap: () =>
                         openLink(context, 'https://wa.me/?text=$both'),
                   ),
