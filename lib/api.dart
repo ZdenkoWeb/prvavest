@@ -1,0 +1,88 @@
+import 'dart:convert';
+
+import 'package:http/http.dart' as http;
+
+import 'config.dart';
+import 'models.dart';
+
+/// Sve što aplikacija traži od sajta prolazi kroz ovu klasu.
+/// Koristi ugrađeni WordPress REST API (prvavest.com/wp-json/wp/v2).
+class WordPressApi {
+  WordPressApi._();
+  static final WordPressApi instance = WordPressApi._();
+
+  final http.Client _client = http.Client();
+
+  static const _headers = {
+    'Accept': 'application/json',
+    'User-Agent': 'PrvaVestApp/1.0 (Android)',
+  };
+
+  Future<dynamic> _get(String path, Map<String, String> query) async {
+    final uri = Uri.parse('${AppConfig.apiBase}/$path')
+        .replace(queryParameters: query);
+    final res = await _client
+        .get(uri, headers: _headers)
+        .timeout(const Duration(seconds: 20));
+
+    // WordPress vraća 400 kad tražimo stranu posle poslednje.
+    if (res.statusCode == 400 && res.body.contains('rest_post_invalid_page_number')) {
+      return <dynamic>[];
+    }
+    if (res.statusCode != 200) {
+      throw ApiException('Sajt je vratio grešku ${res.statusCode}.');
+    }
+    return jsonDecode(utf8.decode(res.bodyBytes));
+  }
+
+  /// Kategorije sa sajta, poređane kao u AppConfig.categorySlugs.
+  Future<List<Category>> fetchCategories() async {
+    final data = await _get('categories', {
+      'per_page': '100',
+      '_fields': 'id,name,slug,count',
+    }) as List;
+
+    final bySlug = <String, Category>{};
+    for (final c in data) {
+      final map = c as Map<String, dynamic>;
+      if ((map['count'] as int? ?? 0) > 0) {
+        final cat = Category.fromJson(map);
+        bySlug[cat.slug] = cat;
+      }
+    }
+    return [
+      for (final slug in AppConfig.categorySlugs)
+        if (bySlug.containsKey(slug)) bySlug[slug]!,
+    ];
+  }
+
+  /// Vesti. Bez parametara vraća najnovije; može se filtrirati
+  /// po kategoriji ili pretraživati po reči.
+  Future<List<Post>> fetchPosts({
+    int page = 1,
+    int? categoryId,
+    String? search,
+  }) async {
+    final query = <String, String>{
+      'per_page': '${AppConfig.pageSize}',
+      'page': '$page',
+      '_embed': 'author,wp:featuredmedia,wp:term',
+    };
+    if (categoryId != null) query['categories'] = '$categoryId';
+    if (search != null && search.trim().isNotEmpty) {
+      query['search'] = search.trim();
+    }
+
+    final data = await _get('posts', query) as List;
+    return data
+        .map((p) => Post.fromWordPress(p as Map<String, dynamic>))
+        .toList();
+  }
+}
+
+class ApiException implements Exception {
+  final String message;
+  ApiException(this.message);
+  @override
+  String toString() => message;
+}
