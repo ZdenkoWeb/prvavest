@@ -24,6 +24,7 @@ jobs:
         run: |
           flutter create --org com.prvavest --project-name prvavest --platforms android .
           flutter pub add http cached_network_image flutter_widget_from_html_core shared_preferences url_launcher
+          flutter pub add --dev flutter_launcher_icons
           # Dozvola za internet (potrebna da bi aplikacija preuzimala vesti)
           MANIFEST=android/app/src/main/AndroidManifest.xml
           grep -q 'android.permission.INTERNET' $MANIFEST || \
@@ -31,14 +32,34 @@ jobs:
           # Ime aplikacije ispod ikonice na telefonu
           sed -i 's#android:label="prvavest"#android:label="Prva Vest"#' $MANIFEST
 
+      - name: Napravi ikonicu
+        run: dart run flutter_launcher_icons
+
       - name: Proveri kod
         run: flutter analyze --no-fatal-infos --no-fatal-warnings
 
       - name: Napravi APK
         run: flutter build apk --release
 
+      - name: Potpiši APK stalnim ključem
+        env:
+          KLJUC: ${{ secrets.KLJUC }}
+          LOZINKA: ${{ secrets.LOZINKA }}
+        run: |
+          APK=build/app/outputs/flutter-apk/app-release.apk
+          if [ -z "$KLJUC" ]; then
+            echo "Ključ nije podešen na GitHubu, APK ostaje sa probnim potpisom."
+            exit 0
+          fi
+          echo "$KLJUC" | base64 -d > kljuc.jks
+          BT=$(ls "$ANDROID_HOME/build-tools" | sort -V | tail -1)
+          "$ANDROID_HOME/build-tools/$BT/apksigner" sign \
+            --ks kljuc.jks --ks-key-alias prvavest \
+            --ks-pass env:LOZINKA --key-pass env:LOZINKA "$APK"
+          "$ANDROID_HOME/build-tools/$BT/apksigner" verify --print-certs "$APK"
+          rm -f kljuc.jks
+
       - uses: actions/upload-artifact@v4
         with:
           name: prva-vest-apk
           path: build/app/outputs/flutter-apk/app-release.apk
-
