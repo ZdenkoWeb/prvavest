@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'config.dart';
+import 'logo_data.dart';
 import 'models.dart';
 import 'saved_store.dart';
 import 'screens/article_screen.dart';
@@ -58,7 +59,10 @@ String chipLabel(Category c) => c.slug == AppConfig.highlightedSlug
 // Logo
 // ---------------------------------------------------------------------------
 
-/// Znak "1V": jedinica i narandžasta kosa crta.
+bool _isLight(Color c) => c.computeLuminance() > 0.5;
+
+/// Znak "1V" iz pravog logoa. Bela verzija se bira sama
+/// kad je tekst svetao (tamna tema ili crna pozadina).
 class OneVMark extends StatelessWidget {
   final double size;
   final Color? oneColor;
@@ -66,61 +70,33 @@ class OneVMark extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        Text(
-          '1',
-          style: TextStyle(
-            fontSize: size,
-            height: 1,
-            fontWeight: FontWeight.w900,
-            color: oneColor ?? context.ink,
-          ),
-        ),
-        SizedBox(width: size * 0.06),
-        Transform(
-          alignment: Alignment.center,
-          transform: Matrix4.skewX(-0.42),
-          child: Container(
-            width: size * 0.2,
-            height: size * 0.74,
-            color: AppConfig.brandColor,
-          ),
-        ),
-      ],
+    final white = _isLight(oneColor ?? context.ink);
+    return Image.memory(
+      white ? LogoData.markWhite : LogoData.mark,
+      height: size * 1.1,
+      fit: BoxFit.contain,
+      gaplessPlayback: true,
+      filterQuality: FilterQuality.medium,
+      semanticLabel: AppConfig.appName,
     );
   }
 }
 
-/// Logo PRVA 1V EST, nacrtan u aplikaciji (radi i u tamnoj temi).
+/// Pravi logo PRVA 1V EST. U tamnoj temi koristi belu verziju.
 class PrvaVestLogo extends StatelessWidget {
   final double height;
   const PrvaVestLogo({super.key, this.height = 30});
 
   @override
   Widget build(BuildContext context) {
-    final style = TextStyle(
-      fontSize: height * 0.7,
-      height: 1,
-      fontWeight: FontWeight.w900,
-      letterSpacing: 0.4,
-      color: context.ink,
-    );
-    return Semantics(
-      label: AppConfig.appName,
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Text('PRVA', style: style),
-          SizedBox(width: height * 0.04),
-          OneVMark(size: height * 0.92),
-          SizedBox(width: height * 0.05),
-          Text('EST', style: style),
-        ],
-      ),
+    final white = _isLight(context.ink);
+    return Image.memory(
+      white ? LogoData.logoWhite : LogoData.logo,
+      height: height * 1.3,
+      fit: BoxFit.contain,
+      gaplessPlayback: true,
+      filterQuality: FilterQuality.medium,
+      semanticLabel: AppConfig.appName,
     );
   }
 }
