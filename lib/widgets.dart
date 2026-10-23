@@ -9,7 +9,7 @@ import 'screens/article_screen.dart';
 /// prikazuje se natpis u bojama sajta.
 class PrvaVestLogo extends StatelessWidget {
   final double height;
-  const PrvaVestLogo({super.key, this.height = 30});
+  const PrvaVestLogo({super.key, this.height = 40});
 
   @override
   Widget build(BuildContext context) {
@@ -104,7 +104,7 @@ class CategoryLabel extends StatelessWidget {
         fontSize: size,
         fontWeight: FontWeight.w700,
         letterSpacing: 0.8,
-        color: AppConfig.brandColor,
+        color: AppConfig.brandTextColor,
       ),
     );
   }

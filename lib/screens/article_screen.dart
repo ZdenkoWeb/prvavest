@@ -31,7 +31,7 @@ class ArticleScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const PrvaVestLogo(height: 26),
+        title: const PrvaVestLogo(height: 34),
         actions: [
           ListenableBuilder(
             listenable: store,
@@ -65,7 +65,10 @@ class ArticleScreen extends StatelessWidget {
         ],
       ),
       body: ListView(
-        padding: const EdgeInsets.only(bottom: 32),
+        // Razmak na dnu da tekst ne ide ispod dugmića telefona.
+        padding: EdgeInsets.only(
+          bottom: 32 + MediaQuery.paddingOf(context).bottom,
+        ),
         children: [
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 20, 16, 12),
@@ -102,6 +105,29 @@ class ArticleScreen extends StatelessWidget {
             child: HtmlWidget(
               post.content,
               textStyle: const TextStyle(fontSize: 17, height: 1.6),
+              // Podnaslovi u tekstu moraju biti manji od glavnog naslova.
+              customStylesBuilder: (element) {
+                switch (element.localName) {
+                  case 'h1':
+                  case 'h2':
+                    return {
+                      'font-size': '20px',
+                      'line-height': '1.3',
+                      'font-weight': '700',
+                      'margin': '8px 0',
+                    };
+                  case 'h3':
+                  case 'h4':
+                    return {
+                      'font-size': '18px',
+                      'line-height': '1.35',
+                      'font-weight': '700',
+                    };
+                  case 'img':
+                    return {'border-radius': '8px'};
+                }
+                return null;
+              },
               onTapUrl: (url) async {
                 await _openInBrowser(context, url);
                 return true;

@@ -11,8 +11,11 @@ class AppConfig {
   static const String logoUrl =
       '$siteUrl/wp-content/uploads/2022/07/prva-vest-logo-.png';
 
-  /// Glavna boja aplikacije (dugmad, oznake kategorija...).
-  static const Color brandColor = Color(0xFFC8102E);
+  /// Glavna boja aplikacije, narandžasta iz logoa (dugmad, oznake...).
+  static const Color brandColor = Color(0xFFFF5500);
+
+  /// Malo tamnija narandžasta za sitan tekst, da bude čitljiviji.
+  static const Color brandTextColor = Color(0xFFD94600);
 
   /// Kategorije koje se prikazuju kao kartice na početnom ekranu,
   /// tim redosledom. Ovo su "slug"-ovi kategorija sa sajta
