@@ -1,18 +1,21 @@
 import 'package:flutter/material.dart';
 
 import '../post_list.dart';
+import '../theme.dart';
 
 /// Pretraga vesti po reči (npr. "Đoković", "izbori").
+/// Otvara se lupom u zaglavlju ili dodirom na oznaku ispod vesti.
 class SearchScreen extends StatefulWidget {
-  const SearchScreen({super.key});
+  final String? initialQuery;
+  const SearchScreen({super.key, this.initialQuery});
 
   @override
   State<SearchScreen> createState() => _SearchScreenState();
 }
 
 class _SearchScreenState extends State<SearchScreen> {
-  final _controller = TextEditingController();
-  String _query = '';
+  late final _controller = TextEditingController(text: widget.initialQuery);
+  late String _query = widget.initialQuery?.trim() ?? '';
 
   @override
   void dispose() {
@@ -28,53 +31,74 @@ class _SearchScreenState extends State<SearchScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Pretraga')),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
-            child: TextField(
-              controller: _controller,
-              textInputAction: TextInputAction.search,
-              onSubmitted: _submit,
-              decoration: InputDecoration(
-                hintText: 'Pretraži vesti…',
-                prefixIcon: const Icon(Icons.search),
-                suffixIcon: IconButton(
-                  tooltip: 'Obriši',
-                  icon: const Icon(Icons.close),
-                  onPressed: () {
-                    _controller.clear();
-                    setState(() => _query = '');
-                  },
-                ),
-                filled: true,
-                fillColor: Colors.white,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(28),
-                ),
-              ),
-            ),
-          ),
-          Expanded(
-            child: _query.isEmpty
-                ? const Center(
-                    child: Padding(
-                      padding: EdgeInsets.all(32),
-                      child: Text(
-                        'Ukucaj pojam i pritisni pretragu na tastaturi.',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(color: Colors.black54),
+      body: SafeArea(
+        bottom: false,
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(4, 8, 14, 8),
+              child: Row(
+                children: [
+                  IconButton(
+                    tooltip: 'Nazad',
+                    icon: Icon(Icons.arrow_back, color: context.ink),
+                    onPressed: () => Navigator.of(context).pop(),
+                  ),
+                  Expanded(
+                    child: TextField(
+                      controller: _controller,
+                      autofocus: _query.isEmpty,
+                      textInputAction: TextInputAction.search,
+                      onSubmitted: _submit,
+                      style: TextStyle(color: context.ink, fontSize: 16),
+                      decoration: InputDecoration(
+                        hintText: 'Pretraži vesti…',
+                        hintStyle: TextStyle(color: context.muted),
+                        prefixIcon: Icon(Icons.search, color: context.muted),
+                        suffixIcon: IconButton(
+                          tooltip: 'Obriši',
+                          icon: Icon(Icons.close, color: context.muted),
+                          onPressed: () {
+                            _controller.clear();
+                            setState(() => _query = '');
+                          },
+                        ),
+                        filled: true,
+                        fillColor: context.box,
+                        contentPadding: const EdgeInsets.symmetric(
+                          vertical: 12,
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(28),
+                          borderSide: BorderSide.none,
+                        ),
                       ),
                     ),
-                  )
-                : PostListView(
-                    key: ValueKey(_query),
-                    search: _query,
-                    featuredFirst: false,
                   ),
-          ),
-        ],
+                ],
+              ),
+            ),
+            Container(height: 4, color: context.box),
+            Expanded(
+              child: _query.isEmpty
+                  ? Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(32),
+                        child: Text(
+                          'Ukucaj pojam i pritisni pretragu na tastaturi.',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(color: context.muted),
+                        ),
+                      ),
+                    )
+                  : PostListView(
+                      key: ValueKey(_query),
+                      search: _query,
+                      style: PostListStyle.plain,
+                    ),
+            ),
+          ],
+        ),
       ),
     );
   }

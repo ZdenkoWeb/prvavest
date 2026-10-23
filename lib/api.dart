@@ -15,24 +15,34 @@ class WordPressApi {
 
   static const _headers = {
     'Accept': 'application/json',
-    'User-Agent': 'PrvaVestApp/1.0 (Android)',
+    'User-Agent': 'PrvaVestApp/1.1 (Android)',
   };
 
   Future<dynamic> _get(String path, Map<String, String> query) async {
-    final uri = Uri.parse('${AppConfig.apiBase}/$path')
-        .replace(queryParameters: query);
+    final uri =
+        Uri.parse('${AppConfig.apiBase}/$path').replace(queryParameters: query);
     final res = await _client
         .get(uri, headers: _headers)
         .timeout(const Duration(seconds: 20));
 
     // WordPress vraća 400 kad tražimo stranu posle poslednje.
-    if (res.statusCode == 400 && res.body.contains('rest_post_invalid_page_number')) {
+    if (res.statusCode == 400 &&
+        res.body.contains('rest_post_invalid_page_number')) {
       return <dynamic>[];
     }
     if (res.statusCode != 200) {
       throw ApiException('Sajt je vratio grešku ${res.statusCode}.');
     }
     return jsonDecode(utf8.decode(res.bodyBytes));
+  }
+
+  Future<List<Category>>? _categories;
+
+  /// Kategorije se učitavaju jednom i pamte (koriste ih traka,
+  /// meni i ekran Kategorije). refresh: true ih učitava ponovo.
+  Future<List<Category>> categories({bool refresh = false}) {
+    if (refresh) _categories = null;
+    return _categories ??= fetchCategories();
   }
 
   /// Kategorije sa sajta, poređane kao u AppConfig.categorySlugs.

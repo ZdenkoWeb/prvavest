@@ -1,39 +1,50 @@
 import 'package:flutter/material.dart';
 
 /// Osnovna podešavanja aplikacije. Ako nešto menjaš na sajtu
-/// (logo, boje, kategorije), dovoljno je da promeniš ovde.
+/// (boje, kategorije, tekst o sajtu), dovoljno je da promeniš ovde.
 class AppConfig {
   static const String appName = 'Prva Vest';
   static const String siteUrl = 'https://prvavest.com';
   static const String apiBase = '$siteUrl/wp-json/wp/v2';
 
-  /// Logo se učitava direktno sa sajta.
-  static const String logoUrl =
-      '$siteUrl/wp-content/uploads/2022/07/prva-vest-logo-.png';
+  /// Narandžasta boja sajta (traka NAJNOVIJE, dugmad, oznake).
+  static const Color brandColor = Color(0xFFF26A1F);
 
-  /// Glavna boja aplikacije, narandžasta iz logoa (dugmad, oznake...).
-  static const Color brandColor = Color(0xFFFF5500);
+  /// Tamnija narandžasta (levi deo trake NAJNOVIJE).
+  static const Color brandDark = Color(0xFFD9541A);
 
-  /// Malo tamnija narandžasta za sitan tekst, da bude čitljiviji.
-  static const Color brandTextColor = Color(0xFFD94600);
+  /// Narandžasta za sitan tekst, da bude čitljiviji.
+  static const Color brandTextColor = Color(0xFFE05A14);
 
-  /// Kategorije koje se prikazuju kao kartice na početnom ekranu,
-  /// tim redosledom. Ovo su "slug"-ovi kategorija sa sajta
-  /// (deo adrese posle /kategorija/).
+  /// Tamnoplava boja naslova, kao na sajtu.
+  static const Color inkColor = Color(0xFF141938);
+
+  /// Kategorija koja se ističe narandžastim okvirom (#Izbori2026).
+  static const String highlightedSlug = 'izbori-2026';
+
+  /// Kategorije u traci ispod logoa, tim redosledom (kao na sajtu).
+  /// Ovo su "slug"-ovi kategorija (deo adrese posle /kategorija/).
   static const List<String> categorySlugs = [
     'izbori-2026',
-    'politika',
+    'srbija',
     'drustvo',
-    'hronika',
+    'politika',
     'ekonomija',
     'svet',
     'sport',
+    'hronika',
     'beograd',
-    'srbija',
     'tehnologija',
     'kolumna',
     'recepti',
   ];
+
+  /// Tekst o sajtu u dnu ekrana Kategorije.
+  static const String aboutText =
+      'Prva Vest je digitalni medij posvećen najvažnijim vestima iz Srbije, '
+      'regiona i sveta. Donosimo aktuelne vesti, zanimljive priče, društvene '
+      'teme, sport i informacije koje privlače pažnju javnosti — brzo, jasno '
+      'i direktno.';
 
   /// Koliko vesti se učitava odjednom.
   static const int pageSize = 20;

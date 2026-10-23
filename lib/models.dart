@@ -22,8 +22,10 @@ class Post {
   final String content; // HTML tekst članka
   final String link; // adresa vesti na sajtu
   final DateTime date;
+  final DateTime? modified;
   final String author;
   final String category;
+  final List<String> tags;
   final String? imageUrl;
 
   const Post({
@@ -35,6 +37,8 @@ class Post {
     required this.date,
     required this.author,
     required this.category,
+    this.modified,
+    this.tags = const [],
     this.imageUrl,
   });
 
@@ -46,7 +50,7 @@ class Post {
     var author = '';
     final authors = embedded['author'];
     if (authors is List && authors.isNotEmpty && authors.first is Map) {
-      author = (authors.first as Map)['name']?.toString() ?? '';
+      author = decodeHtml((authors.first as Map)['name']?.toString() ?? '');
     }
 
     // Glavna slika (biramo srednju veličinu da se brže učitava)
@@ -67,13 +71,23 @@ class Post {
       image ??= m['source_url']?.toString();
     }
 
-    // Prva kategorija
+    // Kategorija (prva) i oznake (tagovi)
     var category = '';
+    final tags = <String>[];
     final terms = embedded['wp:term'];
-    if (terms is List && terms.isNotEmpty && terms.first is List) {
-      final cats = terms.first as List;
-      if (cats.isNotEmpty && cats.first is Map) {
-        category = decodeHtml((cats.first as Map)['name']?.toString() ?? '');
+    if (terms is List) {
+      for (final group in terms) {
+        if (group is! List) continue;
+        for (final t in group) {
+          if (t is! Map) continue;
+          final name = decodeHtml(t['name']?.toString() ?? '');
+          if (name.isEmpty) continue;
+          if (t['taxonomy'] == 'category' && category.isEmpty) {
+            category = name;
+          } else if (t['taxonomy'] == 'post_tag') {
+            tags.add(name);
+          }
+        }
       }
     }
 
@@ -84,8 +98,10 @@ class Post {
       content: _rendered(json['content']),
       link: json['link']?.toString() ?? '',
       date: DateTime.tryParse(json['date']?.toString() ?? '') ?? DateTime.now(),
+      modified: DateTime.tryParse(json['modified']?.toString() ?? ''),
       author: author,
       category: category,
+      tags: tags,
       imageUrl: image,
     );
   }
@@ -98,8 +114,10 @@ class Post {
         'content': content,
         'link': link,
         'date': date.toIso8601String(),
+        'modified': modified?.toIso8601String(),
         'author': author,
         'category': category,
+        'tags': tags,
         'imageUrl': imageUrl,
       };
 
@@ -110,8 +128,12 @@ class Post {
         content: m['content']?.toString() ?? '',
         link: m['link']?.toString() ?? '',
         date: DateTime.tryParse(m['date']?.toString() ?? '') ?? DateTime.now(),
+        modified: DateTime.tryParse(m['modified']?.toString() ?? ''),
         author: m['author']?.toString() ?? '',
         category: m['category']?.toString() ?? '',
+        tags: (m['tags'] is List)
+            ? (m['tags'] as List).map((e) => e.toString()).toList()
+            : const [],
         imageUrl: m['imageUrl']?.toString(),
       );
 
@@ -127,8 +149,10 @@ String _rendered(dynamic field) {
 }
 
 /// Uklanja HTML oznake iz teksta.
-String stripTags(String html) =>
-    html.replaceAll(RegExp(r'<[^>]*>'), ' ').replaceAll(RegExp(r'\s+'), ' ').trim();
+String stripTags(String html) => html
+    .replaceAll(RegExp(r'<[^>]*>'), ' ')
+    .replaceAll(RegExp(r'\s+'), ' ')
+    .trim();
 
 /// Pretvara HTML oznake za znakove (npr. &#8220; ili &amp;) u prave znakove.
 String decodeHtml(String text) {
@@ -163,9 +187,9 @@ const _months = [
   'jul', 'avgust', 'septembar', 'oktobar', 'novembar', 'decembar',
 ];
 
+/// "pre 5 min", "pre 3 h", a starije vesti sa datumom.
 String formatDate(DateTime d) {
-  final now = DateTime.now();
-  final diff = now.difference(d);
+  final diff = DateTime.now().difference(d);
   if (diff.inMinutes < 60 && !diff.isNegative) {
     final m = diff.inMinutes < 1 ? 1 : diff.inMinutes;
     return 'pre $m min';
@@ -174,4 +198,22 @@ String formatDate(DateTime d) {
     return 'pre ${diff.inHours} h';
   }
   return '${d.day}. ${_months[d.month - 1]} ${d.year}.';
+}
+
+/// Uvek relativno, kao u traci NAJNOVIJE: "pre 2 dana".
+String relativeLabel(DateTime d) {
+  final diff = DateTime.now().difference(d);
+  if (diff.isNegative || diff.inMinutes < 1) return 'upravo';
+  if (diff.inMinutes < 60) return 'pre ${diff.inMinutes} min';
+  if (diff.inHours < 24) return 'pre ${diff.inHours} h';
+  final days = diff.inDays;
+  final word = (days % 10 == 1 && days % 100 != 11) ? 'dan' : 'dana';
+  return 'pre $days $word';
+}
+
+/// "21. oktobar 2026, 14:27"
+String formatDateTime(DateTime d) {
+  final hh = d.hour.toString().padLeft(2, '0');
+  final mm = d.minute.toString().padLeft(2, '0');
+  return '${d.day}. ${_months[d.month - 1]} ${d.year}, $hh:$mm';
 }

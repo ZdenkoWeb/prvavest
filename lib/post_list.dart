@@ -3,20 +3,27 @@ import 'package:flutter/material.dart';
 import 'api.dart';
 import 'config.dart';
 import 'models.dart';
+import 'theme.dart';
 import 'widgets.dart';
+
+/// Kako lista izgleda:
+/// home     – prva vest velika, ostale sa slikom levo
+/// numbered – vesti sa brojevima 1, 2, 3... (Najnovije)
+/// plain    – sve sa slikom levo (pretraga)
+enum PostListStyle { home, numbered, plain }
 
 /// Lista vesti koja se sama dopunjava kad skroluješ do dna,
 /// a osvežava se povlačenjem nadole.
 class PostListView extends StatefulWidget {
   final int? categoryId;
   final String? search;
-  final bool featuredFirst;
+  final PostListStyle style;
 
   const PostListView({
     super.key,
     this.categoryId,
     this.search,
-    this.featuredFirst = true,
+    this.style = PostListStyle.home,
   });
 
   @override
@@ -101,23 +108,25 @@ class _PostListViewState extends State<PostListView>
       if (_loading) {
         return const Center(child: CircularProgressIndicator());
       }
-      return const Center(
+      return Center(
         child: Padding(
-          padding: EdgeInsets.all(32),
-          child: Text('Nema vesti.', style: TextStyle(color: Colors.black54)),
+          padding: const EdgeInsets.all(32),
+          child: Text('Nema vesti.', style: TextStyle(color: context.muted)),
         ),
       );
     }
 
     final showFooter = _loading || _error != null;
     return RefreshIndicator(
+      color: AppConfig.brandColor,
       onRefresh: _refresh,
       child: ListView.separated(
         controller: _scroll,
         physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.fromLTRB(18, 0, 18, 24),
         itemCount: _posts.length + (showFooter ? 1 : 0),
-        separatorBuilder: (_, __) => const SizedBox(height: 8),
+        separatorBuilder: (context, _) =>
+            Divider(height: 1, thickness: 1, color: context.line),
         itemBuilder: (context, i) {
           if (i == _posts.length) {
             return Padding(
@@ -133,10 +142,16 @@ class _PostListViewState extends State<PostListView>
             );
           }
           final post = _posts[i];
-          if (i == 0 && widget.featuredFirst) {
-            return FeaturedPostCard(post: post);
+          if (i == 0 && widget.style == PostListStyle.home) {
+            return Padding(
+              padding: const EdgeInsets.only(top: 18, bottom: 6),
+              child: HeroPost(post: post),
+            );
           }
-          return PostTile(post: post);
+          return RowPost(
+            post: post,
+            number: widget.style == PostListStyle.numbered ? i + 1 : null,
+          );
         },
       ),
     );
