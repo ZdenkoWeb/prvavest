@@ -4,6 +4,7 @@ import '../api.dart';
 import '../config.dart';
 import '../header.dart';
 import '../models.dart';
+import '../nav.dart';
 import '../post_list.dart';
 import '../theme.dart';
 import '../widgets.dart';
@@ -95,13 +96,13 @@ class CategoryScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      bottomNavigationBar: const AppBottomMenu(),
       body: SafeArea(
         bottom: false,
         child: Column(
           children: [
             SiteHeader(
               onBack: () => Navigator.of(context).pop(),
-              showTicker: false,
             ),
             Padding(
               padding: const EdgeInsets.fromLTRB(18, 18, 18, 0),

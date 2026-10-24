@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../header.dart';
+import '../nav.dart';
 import '../post_list.dart';
 import '../theme.dart';
 
@@ -31,10 +33,12 @@ class _SearchScreenState extends State<SearchScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      bottomNavigationBar: const AppBottomMenu(),
       body: SafeArea(
         bottom: false,
         child: Column(
           children: [
+            const NewsTicker(),
             Padding(
               padding: const EdgeInsets.fromLTRB(4, 8, 14, 8),
               child: Row(

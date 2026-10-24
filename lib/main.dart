@@ -4,6 +4,7 @@ import 'api.dart';
 import 'config.dart';
 import 'header.dart';
 import 'models.dart';
+import 'nav.dart';
 import 'saved_store.dart';
 import 'screens/categories_screen.dart';
 import 'screens/home_screen.dart';
@@ -47,102 +48,38 @@ class HomeShell extends StatefulWidget {
 }
 
 class _HomeShellState extends State<HomeShell> {
-  int _index = 0;
-
   @override
   Widget build(BuildContext context) {
-    return PopScope(
-      // Dugme "nazad" na telefonu prvo vraća na Naslovnu.
-      canPop: _index == 0,
-      onPopInvokedWithResult: (didPop, _) {
-        if (!didPop) setState(() => _index = 0);
-      },
-      child: Scaffold(
-        drawer: const _AppDrawer(),
-        body: SafeArea(
-          bottom: false,
-          child: Column(
-            children: [
-              const SiteHeader(),
-              Expanded(
-                child: IndexedStack(
-                  index: _index,
-                  children: const [
-                    HomeScreen(),
-                    LatestScreen(),
-                    CategoriesScreen(),
-                    SavedScreen(),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-        bottomNavigationBar: _BottomMenu(
-          index: _index,
-          onSelect: (i) => setState(() => _index = i),
-        ),
-      ),
-    );
-  }
-}
-
-class _BottomMenu extends StatelessWidget {
-  final int index;
-  final ValueChanged<int> onSelect;
-  const _BottomMenu({required this.index, required this.onSelect});
-
-  static const _items = [
-    (Icons.article_outlined, 'Naslovna'),
-    (Icons.schedule, 'Najnovije'),
-    (Icons.grid_view, 'Kategorije'),
-    (Icons.bookmark_border, 'Sačuvano'),
-  ];
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: context.bg,
-        border: Border(top: BorderSide(color: context.line)),
-      ),
-      child: SafeArea(
-        top: false,
-        child: SizedBox(
-          height: 66,
-          child: Row(
-            children: [
-              for (var i = 0; i < _items.length; i++)
+    return ValueListenableBuilder<int>(
+      valueListenable: homeTab,
+      builder: (context, index, _) => PopScope(
+        // Dugme "nazad" na telefonu prvo vraća na Naslovnu.
+        canPop: index == 0,
+        onPopInvokedWithResult: (didPop, _) {
+          if (!didPop) homeTab.value = 0;
+        },
+        child: Scaffold(
+          drawer: const _AppDrawer(),
+          body: SafeArea(
+            bottom: false,
+            child: Column(
+              children: [
+                const SiteHeader(),
                 Expanded(
-                  child: InkWell(
-                    onTap: () => onSelect(i),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          _items[i].$1,
-                          size: 27,
-                          color: i == index
-                              ? AppConfig.brandColor
-                              : context.ink,
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          _items[i].$2,
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                            color: i == index
-                                ? AppConfig.brandColor
-                                : context.ink,
-                          ),
-                        ),
-                      ],
-                    ),
+                  child: IndexedStack(
+                    index: index,
+                    children: const [
+                      HomeScreen(),
+                      LatestScreen(),
+                      CategoriesScreen(),
+                      SavedScreen(),
+                    ],
                   ),
                 ),
-            ],
+              ],
+            ),
           ),
+          bottomNavigationBar: const AppBottomMenu(),
         ),
       ),
     );

@@ -3,8 +3,10 @@ import 'package:flutter/services.dart';
 import 'package:flutter_widget_from_html_core/flutter_widget_from_html_core.dart';
 
 import '../config.dart';
+import '../embeds.dart';
 import '../header.dart';
 import '../models.dart';
+import '../nav.dart';
 import '../theme.dart';
 import '../widgets.dart';
 
@@ -16,21 +18,19 @@ class ArticleScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ink = context.ink;
-    final bottomInset = MediaQuery.paddingOf(context).bottom;
-
     return Scaffold(
+      bottomNavigationBar: const AppBottomMenu(),
       body: SafeArea(
         bottom: false,
         child: Column(
           children: [
             SiteHeader(
               onBack: () => Navigator.of(context).pop(),
-              showTicker: false,
               showChips: false,
             ),
             Expanded(
               child: ListView(
-                padding: EdgeInsets.fromLTRB(20, 24, 20, 32 + bottomInset),
+                padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
                 children: [
                   CategoryLabel(post.category, size: 15),
                   const SizedBox(height: 14),
@@ -67,6 +67,9 @@ class ArticleScreen extends StatelessWidget {
                       height: 1.65,
                       color: ink,
                     ),
+                    // Objave sa X-a, Instagrama, TikToka i YouTube snimci.
+                    customWidgetBuilder: (element) =>
+                        buildEmbed(context, element),
                     customStylesBuilder: (element) {
                       switch (element.localName) {
                         case 'h1':

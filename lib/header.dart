@@ -150,40 +150,46 @@ class CategoryChips extends StatelessWidget {
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 6),
             itemCount: cats.length,
-            separatorBuilder: (_, __) => const SizedBox(width: 2),
-            itemBuilder: (context, i) {
-              final c = cats[i];
-              final highlighted = c.slug == AppConfig.highlightedSlug;
-              return Center(
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(20),
-                  onTap: () => openCategory(context, c),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 6,
-                    ),
-                    decoration: highlighted
-                        ? BoxDecoration(
-                            color: AppConfig.brandColor,
-                            borderRadius: BorderRadius.circular(20),
-                          )
-                        : null,
-                    child: Text(
-                      chipLabel(c),
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: 0.4,
-                        color: highlighted ? Colors.white : context.ink,
-                      ),
-                    ),
-                  ),
-                ),
-              );
-            },
+            separatorBuilder: (_, _) => const SizedBox(width: 2),
+            itemBuilder: (context, i) => _CategoryChip(category: cats[i]),
           );
         },
+      ),
+    );
+  }
+}
+
+/// Jedna kategorija u traci. Poseban widget, da bi boja teksta
+/// sigurno pratila svetlu/tamnu temu.
+class _CategoryChip extends StatelessWidget {
+  final Category category;
+  const _CategoryChip({required this.category});
+
+  @override
+  Widget build(BuildContext context) {
+    final highlighted = category.slug == AppConfig.highlightedSlug;
+    return Center(
+      child: InkWell(
+        borderRadius: BorderRadius.circular(20),
+        onTap: () => openCategory(context, category),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          decoration: highlighted
+              ? BoxDecoration(
+                  color: AppConfig.brandColor,
+                  borderRadius: BorderRadius.circular(20),
+                )
+              : null,
+          child: Text(
+            chipLabel(category),
+            style: TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 0.4,
+              color: highlighted ? Colors.white : context.ink,
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -216,7 +222,7 @@ class _NewsTickerState extends State<NewsTicker>
 
   Future<void> _load() async {
     try {
-      final posts = await WordPressApi.instance.fetchPosts();
+      final posts = await WordPressApi.instance.latest();
       if (!mounted || posts.isEmpty) return;
       setState(() => _posts = posts.take(10).toList());
       if (!_ticker.isActive) _ticker.start();

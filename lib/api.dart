@@ -42,7 +42,27 @@ class WordPressApi {
   /// meni i ekran Kategorije). refresh: true ih učitava ponovo.
   Future<List<Category>> categories({bool refresh = false}) {
     if (refresh) _categories = null;
-    return _categories ??= fetchCategories();
+    return _categories ??= fetchCategories().catchError((Object e) {
+      _categories = null; // bez interneta: sledeći put pokušaj ponovo
+      throw e;
+    });
+  }
+
+  Future<List<Post>>? _latest;
+  DateTime _latestAt = DateTime(2000);
+
+  /// Najnovije vesti za traku NAJNOVIJE. Pamte se 5 minuta, da se
+  /// traka ne učitava iznova na svakom ekranu.
+  Future<List<Post>> latest() {
+    final stale = DateTime.now().difference(_latestAt).inMinutes >= 5;
+    if (_latest == null || stale) {
+      _latestAt = DateTime.now();
+      _latest = fetchPosts().catchError((Object e) {
+        _latest = null; // sledeći put pokušaj ponovo
+        throw e;
+      });
+    }
+    return _latest!;
   }
 
   /// Kategorije sa sajta, poređane kao u AppConfig.categorySlugs.

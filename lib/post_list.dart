@@ -125,8 +125,7 @@ class _PostListViewState extends State<PostListView>
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.fromLTRB(18, 0, 18, 24),
         itemCount: _posts.length + (showFooter ? 1 : 0),
-        separatorBuilder: (context, _) =>
-            Divider(height: 1, thickness: 1, color: context.line),
+        separatorBuilder: (_, _) => const _Line(),
         itemBuilder: (context, i) {
           if (i == _posts.length) {
             return Padding(
@@ -156,4 +155,13 @@ class _PostListViewState extends State<PostListView>
       ),
     );
   }
+}
+
+/// Tanka linija između vesti (prati svetlu/tamnu temu).
+class _Line extends StatelessWidget {
+  const _Line();
+
+  @override
+  Widget build(BuildContext context) =>
+      Divider(height: 1, thickness: 1, color: context.line);
 }
