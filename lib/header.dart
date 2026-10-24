@@ -63,7 +63,7 @@ class _TopBar extends StatelessWidget {
               ),
             ),
           ),
-          const PrvaVestLogo(height: 26),
+          const PrvaVestLogo(height: 21),
           Align(
             alignment: Alignment.centerRight,
             child: Padding(
