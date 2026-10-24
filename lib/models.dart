@@ -25,6 +25,7 @@ class Post {
   final DateTime? modified;
   final String author;
   final String category;
+  final int? categoryId;
   final List<String> tags;
   final String? imageUrl;
 
@@ -37,6 +38,7 @@ class Post {
     required this.date,
     required this.author,
     required this.category,
+    this.categoryId,
     this.modified,
     this.tags = const [],
     this.imageUrl,
@@ -73,6 +75,7 @@ class Post {
 
     // Kategorija (prva) i oznake (tagovi)
     var category = '';
+    int? categoryId;
     final tags = <String>[];
     final terms = embedded['wp:term'];
     if (terms is List) {
@@ -84,6 +87,7 @@ class Post {
           if (name.isEmpty) continue;
           if (t['taxonomy'] == 'category' && category.isEmpty) {
             category = name;
+            categoryId = t['id'] is int ? t['id'] as int : null;
           } else if (t['taxonomy'] == 'post_tag') {
             tags.add(name);
           }
@@ -101,6 +105,7 @@ class Post {
       modified: DateTime.tryParse(json['modified']?.toString() ?? ''),
       author: author,
       category: category,
+      categoryId: categoryId,
       tags: tags,
       imageUrl: image,
     );
@@ -117,6 +122,7 @@ class Post {
         'modified': modified?.toIso8601String(),
         'author': author,
         'category': category,
+        'categoryId': categoryId,
         'tags': tags,
         'imageUrl': imageUrl,
       };
@@ -131,6 +137,7 @@ class Post {
         modified: DateTime.tryParse(m['modified']?.toString() ?? ''),
         author: m['author']?.toString() ?? '',
         category: m['category']?.toString() ?? '',
+        categoryId: m['categoryId'] is int ? m['categoryId'] as int : null,
         tags: (m['tags'] is List)
             ? (m['tags'] as List).map((e) => e.toString()).toList()
             : const [],

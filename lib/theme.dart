@@ -87,3 +87,28 @@ extension PvColors on BuildContext {
   /// Pozadina ekrana.
   Color get bg => Theme.of(this).colorScheme.surface;
 }
+
+/// Veličina slova u tekstu vesti (dugmad A− i A+). Pamti se u telefonu.
+class TextSizeController extends ValueNotifier<double> {
+  TextSizeController._() : super(1.0);
+  static final TextSizeController instance = TextSizeController._();
+
+  static const _key = 'velicina_slova';
+  static const double min = 0.8;
+  static const double max = 1.5;
+  static const double step = 0.1;
+
+  bool get canShrink => value > min + 0.01;
+  bool get canGrow => value < max - 0.01;
+
+  Future<void> load() async {
+    final prefs = await SharedPreferences.getInstance();
+    value = (prefs.getDouble(_key) ?? 1.0).clamp(min, max);
+  }
+
+  Future<void> change(double delta) async {
+    value = double.parse((value + delta).clamp(min, max).toStringAsFixed(1));
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setDouble(_key, value);
+  }
+}

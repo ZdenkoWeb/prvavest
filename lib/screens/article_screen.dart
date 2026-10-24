@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_widget_from_html_core/flutter_widget_from_html_core.dart';
 
+import '../api.dart';
 import '../config.dart';
 import '../embeds.dart';
 import '../header.dart';
@@ -9,6 +10,7 @@ import '../models.dart';
 import '../nav.dart';
 import '../theme.dart';
 import '../widgets.dart';
+import 'image_viewer.dart';
 
 /// Ekran za čitanje jedne vesti, uređen kao stranica vesti na sajtu.
 class ArticleScreen extends StatelessWidget {
@@ -32,8 +34,13 @@ class ArticleScreen extends StatelessWidget {
               child: ListView(
                 padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
                 children: [
-                  CategoryLabel(post.category, size: 15),
-                  const SizedBox(height: 14),
+                  Row(
+                    children: [
+                      Expanded(child: CategoryLabel(post.category, size: 15)),
+                      const _TextSizeButtons(),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
                   Text(
                     post.title,
                     style: TextStyle(
@@ -50,22 +57,42 @@ class ArticleScreen extends StatelessWidget {
                   _Byline(post: post),
                   const SizedBox(height: 20),
                   if (post.imageUrl != null) ...[
-                    AspectRatio(
-                      aspectRatio: 16 / 9,
-                      child: NetImage(
-                        url: post.imageUrl,
-                        radius: BorderRadius.circular(6),
+                    GestureDetector(
+                      onTap: () => openImage(context, post.imageUrl),
+                      child: AspectRatio(
+                        aspectRatio: 16 / 9,
+                        child: Stack(
+                          fit: StackFit.expand,
+                          children: [
+                            NetImage(
+                              url: post.imageUrl,
+                              radius: BorderRadius.circular(6),
+                            ),
+                            const Positioned(
+                              right: 10,
+                              bottom: 10,
+                              child: _ZoomHint(),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                     const SizedBox(height: 20),
                   ],
-                  HtmlWidget(
+                  ValueListenableBuilder<double>(
+                    valueListenable: TextSizeController.instance,
+                    builder: (context, scale, _) => HtmlWidget(
                     post.content,
                     textStyle: TextStyle(
                       fontFamily: kSerif,
-                      fontSize: 18,
+                      fontSize: 18 * scale,
                       height: 1.65,
                       color: ink,
+                    ),
+                    // Dodir na sliku u tekstu otvara je preko celog ekrana.
+                    onTapImage: (image) => openImage(
+                      context,
+                      image.sources.isNotEmpty ? image.sources.first.url : null,
                     ),
                     // Objave sa X-a, Instagrama, TikToka i YouTube snimci.
                     customWidgetBuilder: (element) =>
@@ -75,7 +102,7 @@ class ArticleScreen extends StatelessWidget {
                         case 'h1':
                         case 'h2':
                           return {
-                            'font-size': '22px',
+                            'font-size': '${(22 * scale).round()}px',
                             'line-height': '1.3',
                             'font-weight': '800',
                             'margin': '10px 0',
@@ -83,7 +110,7 @@ class ArticleScreen extends StatelessWidget {
                         case 'h3':
                         case 'h4':
                           return {
-                            'font-size': '19px',
+                            'font-size': '${(19 * scale).round()}px',
                             'line-height': '1.35',
                             'font-weight': '700',
                           };
@@ -108,6 +135,7 @@ class ArticleScreen extends StatelessWidget {
                       await openLink(context, url);
                       return true;
                     },
+                  ),
                   ),
                   const SizedBox(height: 18),
                   Align(
@@ -144,6 +172,7 @@ class ArticleScreen extends StatelessWidget {
                       style: TextStyle(fontWeight: FontWeight.w700),
                     ),
                   ),
+                  _RelatedPosts(post: post),
                 ],
               ),
             ),
@@ -383,6 +412,149 @@ class _ShareButton extends StatelessWidget {
         onTap: onTap,
         child: SizedBox(width: 44, height: 40, child: Center(child: child)),
       ),
+    );
+  }
+}
+
+/// Dugmad A− i A+ za veličinu slova u tekstu vesti.
+class _TextSizeButtons extends StatelessWidget {
+  const _TextSizeButtons();
+
+  @override
+  Widget build(BuildContext context) {
+    final ctrl = TextSizeController.instance;
+    return ValueListenableBuilder<double>(
+      valueListenable: ctrl,
+      builder: (context, _, __) => Container(
+        decoration: BoxDecoration(
+          border: Border.all(color: context.line, width: 1.4),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _SizeButton(
+              label: 'A−',
+              fontSize: 14,
+              tooltip: 'Manja slova',
+              onTap: ctrl.canShrink ? () => ctrl.change(-TextSizeController.step) : null,
+            ),
+            Container(width: 1.4, height: 22, color: context.line),
+            _SizeButton(
+              label: 'A+',
+              fontSize: 18,
+              tooltip: 'Veća slova',
+              onTap: ctrl.canGrow ? () => ctrl.change(TextSizeController.step) : null,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SizeButton extends StatelessWidget {
+  final String label;
+  final double fontSize;
+  final String tooltip;
+  final VoidCallback? onTap;
+  const _SizeButton({
+    required this.label,
+    required this.fontSize,
+    required this.tooltip,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: tooltip,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(20),
+        onTap: onTap,
+        child: SizedBox(
+          width: 46,
+          height: 36,
+          child: Center(
+            child: Text(
+              label,
+              style: TextStyle(
+                fontFamily: kSerif,
+                fontSize: fontSize,
+                fontWeight: FontWeight.w800,
+                color: onTap == null ? context.line : context.ink,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Mala ikonica lupe na glavnoj slici (znak da se slika može uvećati).
+class _ZoomHint extends StatelessWidget {
+  const _ZoomHint();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(6),
+      decoration: BoxDecoration(
+        color: Colors.black.withAlpha(110),
+        shape: BoxShape.circle,
+      ),
+      child: const Icon(Icons.zoom_in, color: Colors.white, size: 20),
+    );
+  }
+}
+
+/// "Pročitajte još": nekoliko vesti iz iste rubrike.
+class _RelatedPosts extends StatefulWidget {
+  final Post post;
+  const _RelatedPosts({required this.post});
+
+  @override
+  State<_RelatedPosts> createState() => _RelatedPostsState();
+}
+
+class _RelatedPostsState extends State<_RelatedPosts> {
+  late final Future<List<Post>> _future = WordPressApi.instance
+      .fetchPosts(categoryId: widget.post.categoryId, perPage: 6)
+      .then((posts) =>
+          posts.where((p) => p.id != widget.post.id).take(4).toList());
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<List<Post>>(
+      future: _future,
+      builder: (context, snap) {
+        final posts = snap.data ?? const <Post>[];
+        if (posts.isEmpty) return const SizedBox.shrink();
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: 34),
+            Text(
+              'Pročitajte još',
+              style: TextStyle(
+                fontFamily: kSerif,
+                fontSize: 24,
+                fontWeight: FontWeight.w800,
+                color: context.ink,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Container(width: 44, height: 3, color: AppConfig.brandColor),
+            const SizedBox(height: 4),
+            for (var i = 0; i < posts.length; i++) ...[
+              RowPost(post: posts[i]),
+              if (i < posts.length - 1)
+                Divider(height: 1, thickness: 1, color: context.line),
+            ],
+          ],
+        );
+      },
     );
   }
 }

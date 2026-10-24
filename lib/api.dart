@@ -92,9 +92,10 @@ class WordPressApi {
     int page = 1,
     int? categoryId,
     String? search,
+    int? perPage,
   }) async {
     final query = <String, String>{
-      'per_page': '${AppConfig.pageSize}',
+      'per_page': '${perPage ?? AppConfig.pageSize}',
       'page': '$page',
       '_embed': 'author,wp:featuredmedia,wp:term',
     };

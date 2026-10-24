@@ -17,10 +17,25 @@ Widget? buildEmbed(BuildContext context, dynamic element) {
 
   // X / Twitter
   if (tag == 'blockquote' && classes.contains('twitter-tweet')) {
-    final paragraphs = <String>[
+    var paragraphs = <String>[
       for (final p in element.querySelectorAll('p') as Iterable)
-        (p.text as String).trim(),
+        _cleanTweet(p.text as String),
     ].where((t) => t.isNotEmpty).toList();
+    // Potpis "— Ime (@nalog) datum" ide posebno, sitnije.
+    var footer = '';
+    if (paragraphs.length > 1 && _isSignature(paragraphs.last)) {
+      footer = paragraphs.removeLast();
+    }
+    if (paragraphs.isEmpty) {
+      paragraphs = [_cleanTweet(element.text as String)];
+    }
+    if (footer.isEmpty) {
+      // Potpis je ponekad van pasusa, odmah u blockquote.
+      final all = (element.text as String).trim();
+      final i = all.lastIndexOf('—');
+      if (i > 0) footer = all.substring(i).trim();
+      if (footer.isNotEmpty && paragraphs.last.contains(footer)) footer = '';
+    }
     final links = <String>[
       for (final a in element.querySelectorAll('a') as Iterable)
         (a.attributes['href'] ?? '').toString(),
@@ -32,9 +47,8 @@ Widget? buildEmbed(BuildContext context, dynamic element) {
     return EmbedCard(
       badge: const _XBadge(),
       label: 'Objava na X',
-      text: paragraphs.isEmpty
-          ? (element.text as String).trim()
-          : paragraphs.join('\n\n'),
+      text: paragraphs.join('\n\n'),
+      footer: footer,
       url: url,
       buttonText: 'Otvori objavu na X',
     );
@@ -44,13 +58,24 @@ Widget? buildEmbed(BuildContext context, dynamic element) {
   if (tag == 'blockquote' && classes.contains('instagram-media')) {
     var url = (attrs['data-instgrm-permalink'] ?? '').toString();
     if (url.isEmpty) url = _firstLink(element, 'instagram.com');
+    // Ispod objave Instagram piše "A post shared by Ime (@nalog)".
+    var footer = '';
+    for (final p in element.querySelectorAll('p') as Iterable) {
+      final t = (p.text as String).replaceAll(RegExp(r'\s+'), ' ').trim();
+      if (t.contains('@') || t.toLowerCase().contains('shared by')) {
+        footer = t;
+      }
+    }
+    final handle = RegExp(r'\(@([\w.]+)\)').firstMatch(footer)?.group(1) ??
+        RegExp(r'instagram\.com/([\w.]+)/?(?:\?|$)').firstMatch(url)?.group(1);
     return EmbedCard(
       badge: const _IconBadge(
         icon: Icons.camera_alt_outlined,
         color: Color(0xFFD62976),
       ),
-      label: 'Objava na Instagramu',
+      label: handle != null ? 'Objava na Instagramu · @$handle' : 'Objava na Instagramu',
       text: '',
+      footer: handle == null ? footer : '',
       url: url,
       buttonText: 'Otvori objavu na Instagramu',
     );
@@ -81,6 +106,16 @@ Widget? buildEmbed(BuildContext context, dynamic element) {
   return null;
 }
 
+/// Uklanja skraćene linkove (t.co, pic.twitter.com) iz teksta objave.
+String _cleanTweet(String text) => text
+    .replaceAll(RegExp(r'(https?://)?t\.co/\S+'), '')
+    .replaceAll(RegExp(r'pic\.twitter\.com/\S+'), '')
+    .replaceAll(RegExp(r'[ \t]+\n'), '\n')
+    .trim();
+
+bool _isSignature(String t) =>
+    t.startsWith('—') || t.startsWith('–') || t.startsWith('- ');
+
 String _firstLink(dynamic element, String host) {
   for (final a in element.querySelectorAll('a') as Iterable) {
     final href = (a.attributes['href'] ?? '').toString();
@@ -94,6 +129,7 @@ class EmbedCard extends StatelessWidget {
   final Widget badge;
   final String label;
   final String text;
+  final String footer;
   final String url;
   final String buttonText;
 
@@ -102,6 +138,7 @@ class EmbedCard extends StatelessWidget {
     required this.badge,
     required this.label,
     required this.text,
+    this.footer = '',
     required this.url,
     required this.buttonText,
   });
@@ -123,12 +160,16 @@ class EmbedCard extends StatelessWidget {
             children: [
               badge,
               const SizedBox(width: 10),
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w700,
-                  color: context.ink,
+              Expanded(
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: context.ink,
+                  ),
                 ),
               ),
             ],
@@ -138,6 +179,13 @@ class EmbedCard extends StatelessWidget {
             Text(
               text,
               style: TextStyle(fontSize: 16, height: 1.45, color: context.ink),
+            ),
+          ],
+          if (footer.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            Text(
+              footer,
+              style: TextStyle(fontSize: 13, height: 1.4, color: context.muted),
             ),
           ],
           if (url.isNotEmpty)

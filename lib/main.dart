@@ -16,6 +16,7 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await SavedStore.instance.load();
   await ThemeController.instance.load();
+  await TextSizeController.instance.load();
   runApp(const PrvaVestApp());
 }
 
