@@ -21,6 +21,13 @@ void openArticle(BuildContext context, Post post) {
   );
 }
 
+/// Otvara vest po adresi sa sajta (vest se prvo preuzme).
+void openArticleUrl(BuildContext context, String url) {
+  Navigator.of(context).push(
+    MaterialPageRoute(builder: (_) => ArticleLoader(url: url)),
+  );
+}
+
 void openCategory(BuildContext context, Category category) {
   Navigator.of(context).push(
     MaterialPageRoute(builder: (_) => CategoryScreen(category: category)),

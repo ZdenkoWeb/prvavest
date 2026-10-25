@@ -18,6 +18,24 @@ class SavedStore extends ChangeNotifier {
 
   bool isSaved(int id) => _posts.any((p) => p.id == id);
 
+  /// Da li je vest sa ovom adresom sačuvana (za naslovnu sa sajta).
+  bool isSavedLink(String link) =>
+      _posts.any((p) => _sameLink(p.link, link));
+
+  static bool _sameLink(String a, String b) {
+    String n(String x) => x.replaceAll(RegExp(r'/+$'), '').toLowerCase();
+    return n(a) == n(b);
+  }
+
+  Future<void> removeLink(String link) async {
+    for (final p in _posts) {
+      if (_sameLink(p.link, link)) {
+        await toggle(p);
+        return;
+      }
+    }
+  }
+
   Future<void> load() async {
     final prefs = await SharedPreferences.getInstance();
     final raw = prefs.getString(_key);

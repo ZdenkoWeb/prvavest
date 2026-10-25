@@ -558,3 +558,64 @@ class _RelatedPostsState extends State<_RelatedPosts> {
     );
   }
 }
+
+/// Preuzima vest po adresi (sa naslovne) i onda je prikazuje.
+class ArticleLoader extends StatefulWidget {
+  final String url;
+  const ArticleLoader({super.key, required this.url});
+
+  @override
+  State<ArticleLoader> createState() => _ArticleLoaderState();
+}
+
+class _ArticleLoaderState extends State<ArticleLoader> {
+  late Future<Post?> _future = WordPressApi.instance.postByUrl(widget.url);
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<Post?>(
+      future: _future,
+      builder: (context, snap) {
+        final post = snap.data;
+        if (post != null) return ArticleScreen(post: post);
+
+        final done = snap.connectionState == ConnectionState.done;
+        return Scaffold(
+          bottomNavigationBar: const AppBottomMenu(),
+          body: SafeArea(
+            bottom: false,
+            child: Column(
+              children: [
+                SiteHeader(
+                  onBack: () => Navigator.of(context).pop(),
+                  showChips: false,
+                ),
+                Expanded(
+                  child: !done
+                      ? const Center(child: CircularProgressIndicator())
+                      : Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            ErrorRetry(
+                              message: 'Vest trenutno ne može da se učita. '
+                                  'Proveri internet vezu.',
+                              onRetry: () => setState(() {
+                                _future =
+                                    WordPressApi.instance.postByUrl(widget.url);
+                              }),
+                            ),
+                            TextButton(
+                              onPressed: () => openLink(context, widget.url),
+                              child: const Text('Otvori na prvavest.com'),
+                            ),
+                          ],
+                        ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}

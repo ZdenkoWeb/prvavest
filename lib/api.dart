@@ -65,6 +65,45 @@ class WordPressApi {
     return _latest!;
   }
 
+  /// HTML naslovne strane sajta (iz njega aplikacija čita raspored
+  /// blokova: glavna vest, Popularno, rubrike...).
+  Future<String> fetchHomeHtml() async {
+    final res = await _client.get(
+      Uri.parse('${AppConfig.siteUrl}/'),
+      headers: const {
+        'Accept': 'text/html',
+        // Tražimo mobilnu verziju sajta.
+        'User-Agent': 'Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 '
+            '(KHTML, like Gecko) Chrome/130.0 Mobile Safari/537.36 PrvaVestApp',
+      },
+    ).timeout(const Duration(seconds: 20));
+    if (res.statusCode != 200) {
+      throw ApiException('Sajt je vratio grešku ${res.statusCode}.');
+    }
+    return utf8.decode(res.bodyBytes, allowMalformed: true);
+  }
+
+  final Map<String, Future<Post?>> _byUrl = {};
+
+  /// Vest po adresi sa sajta (npr. https://prvavest.com/naslov-vesti/).
+  Future<Post?> postByUrl(String url) {
+    return _byUrl[url] ??= _postByUrl(url).catchError((Object e) {
+      _byUrl.remove(url);
+      throw e;
+    });
+  }
+
+  Future<Post?> _postByUrl(String url) async {
+    final segments = Uri.parse(url).pathSegments.where((s) => s.isNotEmpty);
+    if (segments.isEmpty) return null;
+    final data = await _get('posts', {
+      'slug': Uri.decodeComponent(segments.last),
+      '_embed': 'author,wp:featuredmedia,wp:term',
+    }) as List;
+    if (data.isEmpty) return null;
+    return Post.fromWordPress(data.first as Map<String, dynamic>);
+  }
+
   /// Kategorije sa sajta, poređane kao u AppConfig.categorySlugs.
   Future<List<Category>> fetchCategories() async {
     final data = await _get('categories', {

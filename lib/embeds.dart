@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'config.dart';
 import 'theme.dart';
 import 'widgets.dart';
+import 'screens/image_viewer.dart';
 
 /// Objave sa X-a (Twittera), Instagrama, TikToka i YouTube snimci
 /// u tekstu vesti. Na sajtu ih prikazuje JavaScript, koji aplikacija
@@ -14,6 +15,41 @@ Widget? buildEmbed(BuildContext context, dynamic element) {
   final String tag = element.localName ?? '';
   final Set<String> classes = Set<String>.from(element.classes as Iterable);
   final Map attrs = element.attributes as Map;
+
+  // Slike u tekstu: uvek preko cele širine ekrana.
+  if (tag == 'figure') {
+    final img = element.querySelector('img');
+    if (img != null && !_isTinyImage(img)) {
+      final caption = (element.querySelector('figcaption')?.text ?? '')
+          .toString()
+          .trim();
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ContentImage(
+              url: _imgSrc(img),
+              aspect: _imgAspect(img),
+            ),
+            if (caption.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Text(
+                caption,
+                style: TextStyle(fontSize: 13.5, height: 1.4, color: context.muted),
+              ),
+            ],
+          ],
+        ),
+      );
+    }
+  }
+  if (tag == 'img' && !_isTinyImage(element)) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      child: ContentImage(url: _imgSrc(element), aspect: _imgAspect(element)),
+    );
+  }
 
   // X / Twitter
   if (tag == 'blockquote' && classes.contains('twitter-tweet')) {
@@ -115,6 +151,33 @@ String _cleanTweet(String text) => text
 
 bool _isSignature(String t) =>
     t.startsWith('—') || t.startsWith('–') || t.startsWith('- ');
+
+/// Emotikoni i sitne ikonice u tekstu ostaju kakvi jesu.
+bool _isTinyImage(dynamic img) {
+  final Map a = img.attributes as Map;
+  final cls = (a['class'] ?? '').toString();
+  final src = (a['src'] ?? '').toString();
+  if (cls.contains('emoji') || src.contains('s.w.org')) return true;
+  final w = int.tryParse((a['width'] ?? '').toString());
+  return w != null && w < 120;
+}
+
+String _imgSrc(dynamic img) {
+  final Map a = img.attributes as Map;
+  for (final k in ['data-src', 'data-lazy-src', 'src']) {
+    final v = (a[k] ?? '').toString();
+    if (v.startsWith('http')) return v;
+  }
+  return (a['src'] ?? '').toString();
+}
+
+double? _imgAspect(dynamic img) {
+  final Map a = img.attributes as Map;
+  final w = double.tryParse((a['width'] ?? '').toString());
+  final h = double.tryParse((a['height'] ?? '').toString());
+  if (w == null || h == null || w <= 0 || h <= 0) return null;
+  return w / h;
+}
 
 String _firstLink(dynamic element, String host) {
   for (final a in element.querySelectorAll('a') as Iterable) {
@@ -293,6 +356,35 @@ class _IconBadge extends StatelessWidget {
       height: 28,
       decoration: BoxDecoration(color: color, shape: BoxShape.circle),
       child: Icon(icon, color: Colors.white, size: 16),
+    );
+  }
+}
+
+/// Slika iz teksta vesti: puna širina, dodir je otvara preko celog ekrana.
+class ContentImage extends StatelessWidget {
+  final String url;
+  final double? aspect;
+  const ContentImage({super.key, required this.url, this.aspect});
+
+  @override
+  Widget build(BuildContext context) {
+    final image = aspect != null
+        ? AspectRatio(
+            aspectRatio: aspect!,
+            child: NetImage(url: url, radius: BorderRadius.circular(6)),
+          )
+        : ClipRRect(
+            borderRadius: BorderRadius.circular(6),
+            child: Image.network(
+              url,
+              width: double.infinity,
+              fit: BoxFit.fitWidth,
+              errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+            ),
+          );
+    return GestureDetector(
+      onTap: () => openImage(context, url),
+      child: SizedBox(width: double.infinity, child: image),
     );
   }
 }
