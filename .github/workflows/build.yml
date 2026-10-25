@@ -23,7 +23,7 @@ jobs:
       - name: Pripremi Android projekat
         run: |
           flutter create --org com.prvavest --project-name prvavest --platforms android .
-          flutter pub add http cached_network_image flutter_widget_from_html_core shared_preferences url_launcher
+          flutter pub add http cached_network_image flutter_widget_from_html_core shared_preferences url_launcher webview_flutter
           flutter pub add --dev flutter_launcher_icons
           # Dozvola za internet (potrebna da bi aplikacija preuzimala vesti)
           MANIFEST=android/app/src/main/AndroidManifest.xml
