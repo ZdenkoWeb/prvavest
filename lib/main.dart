@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import 'api.dart';
@@ -49,6 +51,36 @@ class HomeShell extends StatefulWidget {
 }
 
 class _HomeShellState extends State<HomeShell> {
+  late final AppLifecycleListener _lifecycle;
+  Timer? _timer;
+  DateTime _pausedAt = DateTime.now();
+
+  @override
+  void initState() {
+    super.initState();
+    // Dok je aplikacija otvorena, nove vesti se učitavaju na 5 minuta.
+    _timer = Timer.periodic(
+      const Duration(minutes: 5),
+      (_) => appRefresh.value++,
+    );
+    _lifecycle = AppLifecycleListener(
+      onHide: () => _pausedAt = DateTime.now(),
+      onShow: () {
+        // Vraćanje u aplikaciju posle 2+ minuta: odmah osveži vesti.
+        if (DateTime.now().difference(_pausedAt).inMinutes >= 2) {
+          appRefresh.value++;
+        }
+      },
+    );
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    _lifecycle.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return ValueListenableBuilder<int>(

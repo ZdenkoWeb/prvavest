@@ -4,6 +4,7 @@ import '../api.dart';
 import '../config.dart';
 import '../home_feed.dart';
 import '../models.dart';
+import '../nav.dart';
 import '../post_list.dart';
 import '../saved_store.dart';
 import '../theme.dart';
@@ -25,6 +26,25 @@ class _HomeScreenState extends State<HomeScreen>
   @override
   bool get wantKeepAlive => true;
 
+  @override
+  void initState() {
+    super.initState();
+    appRefresh.addListener(_silentRefresh);
+  }
+
+  @override
+  void dispose() {
+    appRefresh.removeListener(_silentRefresh);
+    super.dispose();
+  }
+
+  /// Tiho osvežavanje: stara naslovna ostaje dok ne stigne nova.
+  void _silentRefresh() {
+    HomeFeed.load(refresh: true).then((s) {
+      if (mounted && s.isNotEmpty) setState(() => _future = Future.value(s));
+    }).catchError((Object _) {});
+  }
+
   Future<void> _refresh() async {
     final f = HomeFeed.load(refresh: true);
     setState(() => _future = f);
@@ -39,7 +59,7 @@ class _HomeScreenState extends State<HomeScreen>
     return FutureBuilder<List<HomeSection>>(
       future: _future,
       builder: (context, snap) {
-        if (snap.connectionState != ConnectionState.done) {
+        if (snap.connectionState != ConnectionState.done && !snap.hasData) {
           return const Center(child: CircularProgressIndicator());
         }
         final sections = snap.data ?? const <HomeSection>[];

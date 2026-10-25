@@ -7,6 +7,11 @@ import 'theme.dart';
 /// 2 Kategorije, 3 Sačuvano). Deli se između svih ekrana.
 final ValueNotifier<int> homeTab = ValueNotifier<int>(0);
 
+/// Signal za osvežavanje: menja se kad se aplikacija vrati iz pozadine
+/// posle par minuta i na svakih 5 minuta dok je otvorena. Traka
+/// NAJNOVIJE, Naslovna i liste vesti tada same učitaju nove vesti.
+final ValueNotifier<int> appRefresh = ValueNotifier<int>(0);
+
 /// Donji meni koji stoji na svakom ekranu. Sa ekrana vesti ili
 /// rubrike dodir na stavku vraća na glavni ekran i otvara tu stavku.
 class AppBottomMenu extends StatelessWidget {

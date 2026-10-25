@@ -53,9 +53,9 @@ class WordPressApi {
 
   /// Najnovije vesti za traku NAJNOVIJE. Pamte se 5 minuta, da se
   /// traka ne učitava iznova na svakom ekranu.
-  Future<List<Post>> latest() {
+  Future<List<Post>> latest({bool refresh = false}) {
     final stale = DateTime.now().difference(_latestAt).inMinutes >= 5;
-    if (_latest == null || stale) {
+    if (_latest == null || stale || refresh) {
       _latestAt = DateTime.now();
       _latest = fetchPosts().catchError((Object e) {
         _latest = null; // sledeći put pokušaj ponovo

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'api.dart';
 import 'config.dart';
 import 'models.dart';
+import 'nav.dart';
 import 'theme.dart';
 import 'widgets.dart';
 
@@ -50,11 +51,13 @@ class _PostListViewState extends State<PostListView>
         _loadMore();
       }
     });
+    appRefresh.addListener(_checkNew);
     _loadMore();
   }
 
   @override
   void dispose() {
+    appRefresh.removeListener(_checkNew);
     _scroll.dispose();
     super.dispose();
   }
@@ -85,6 +88,23 @@ class _PostListViewState extends State<PostListView>
           'Proveri internet vezu.');
     } finally {
       if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  /// Tiho dodaje nove vesti na vrh liste (bez brisanja i skakanja).
+  Future<void> _checkNew() async {
+    if (_loading || _posts.isEmpty) return;
+    try {
+      final first = await WordPressApi.instance.fetchPosts(
+        categoryId: widget.categoryId,
+        search: widget.search,
+      );
+      if (!mounted) return;
+      final ids = _posts.map((p) => p.id).toSet();
+      final fresh = first.where((p) => !ids.contains(p.id)).toList();
+      if (fresh.isNotEmpty) setState(() => _posts.insertAll(0, fresh));
+    } catch (_) {
+      // Bez interneta lista ostaje kakva je.
     }
   }
 

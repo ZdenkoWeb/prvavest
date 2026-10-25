@@ -233,17 +233,29 @@ class _NewsTickerState extends State<NewsTicker>
   void initState() {
     super.initState();
     _ticker = createTicker(_tick);
+    appRefresh.addListener(_reload);
     _load();
   }
 
-  Future<void> _load() async {
+  void _reload() => _load(refresh: true);
+
+  Future<void> _load({bool refresh = false}) async {
     try {
-      final posts = await WordPressApi.instance.latest();
+      final posts = await WordPressApi.instance.latest(refresh: refresh);
       if (!mounted || posts.isEmpty) return;
-      setState(() => _posts = posts.take(10).toList());
+      // Najnovije prvo.
+      final sorted = [...posts]..sort((a, b) => b.date.compareTo(a.date));
+      final next = sorted.take(10).toList();
+      final changed = _posts.isEmpty || next.first.id != _posts.first.id;
+      setState(() => _posts = next);
+      if (changed) {
+        // Nova vest: traka kreće ispočetka, od najnovije.
+        _offset = 0;
+        if (_scroll.hasClients) _scroll.jumpTo(0);
+      }
       if (!_ticker.isActive) _ticker.start();
     } catch (_) {
-      // Bez interneta traka ostaje prazna, ostatak aplikacije radi.
+      // Bez interneta traka ostaje kakva je, ostatak aplikacije radi.
     }
   }
 
@@ -258,6 +270,7 @@ class _NewsTickerState extends State<NewsTicker>
 
   @override
   void dispose() {
+    appRefresh.removeListener(_reload);
     _ticker.dispose();
     _scroll.dispose();
     super.dispose();
