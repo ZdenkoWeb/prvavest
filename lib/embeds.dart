@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 
 import 'config.dart';
+import 'live_embed.dart';
 import 'theme.dart';
 import 'widgets.dart';
 import 'screens/image_viewer.dart';
 
-/// Objave sa X-a (Twittera), Instagrama, TikToka i YouTube snimci
-/// u tekstu vesti. Na sajtu ih prikazuje JavaScript, koji aplikacija
-/// ne pokreće, pa ih ovde crtamo kao kartice sa tekstom i linkom.
+/// Slike, objave sa X-a (Twittera), Instagrama, TikToka i YouTube
+/// snimci u tekstu vesti. Objave se prikazuju prave, kao na sajtu
+/// (LiveEmbed); ako se ne učitaju, prikazuje se kartica sa linkom.
 ///
 /// `element` je HTML element iz teksta vesti. Vraća null za sve
 /// ostalo, pa se taj deo prikazuje normalno.
@@ -15,6 +16,7 @@ Widget? buildEmbed(BuildContext context, dynamic element) {
   final String tag = element.localName ?? '';
   final Set<String> classes = Set<String>.from(element.classes as Iterable);
   final Map attrs = element.attributes as Map;
+  final dark = Theme.of(context).brightness == Brightness.dark;
 
   // Slike u tekstu: uvek preko cele širine ekrana.
   if (tag == 'figure') {
@@ -80,13 +82,22 @@ Widget? buildEmbed(BuildContext context, dynamic element) {
       (h) => h.contains('/status/'),
       orElse: () => links.isNotEmpty ? links.last : '',
     );
-    return EmbedCard(
+    var tweetHtml = element.outerHtml as String;
+    if (dark) {
+      tweetHtml = tweetHtml.replaceFirst('<blockquote', '<blockquote data-theme="dark"');
+    }
+    return LiveEmbed(
+      embedHtml: tweetHtml,
+      scriptUrl: 'https://platform.twitter.com/widgets.js',
+      dark: dark,
+      fallback: EmbedCard(
       badge: const _XBadge(),
       label: 'Objava na X',
       text: paragraphs.join('\n\n'),
       footer: footer,
       url: url,
       buttonText: 'Otvori objavu na X',
+      ),
     );
   }
 
@@ -104,7 +115,11 @@ Widget? buildEmbed(BuildContext context, dynamic element) {
     }
     final handle = RegExp(r'\(@([\w.]+)\)').firstMatch(footer)?.group(1) ??
         RegExp(r'instagram\.com/([\w.]+)/?(?:\?|$)').firstMatch(url)?.group(1);
-    return EmbedCard(
+    return LiveEmbed(
+      embedHtml: element.outerHtml as String,
+      scriptUrl: 'https://www.instagram.com/embed.js',
+      dark: dark,
+      fallback: EmbedCard(
       badge: const _IconBadge(
         icon: Icons.camera_alt_outlined,
         color: Color(0xFFD62976),
@@ -114,6 +129,7 @@ Widget? buildEmbed(BuildContext context, dynamic element) {
       footer: handle == null ? footer : '',
       url: url,
       buttonText: 'Otvori objavu na Instagramu',
+      ),
     );
   }
 
@@ -121,12 +137,17 @@ Widget? buildEmbed(BuildContext context, dynamic element) {
   if (tag == 'blockquote' && classes.contains('tiktok-embed')) {
     var url = (attrs['cite'] ?? '').toString();
     if (url.isEmpty) url = _firstLink(element, 'tiktok.com');
-    return EmbedCard(
+    return LiveEmbed(
+      embedHtml: element.outerHtml as String,
+      scriptUrl: 'https://www.tiktok.com/embed.js',
+      dark: dark,
+      fallback: EmbedCard(
       badge: const _IconBadge(icon: Icons.music_note, color: Colors.black),
       label: 'Snimak na TikToku',
       text: '',
       url: url,
       buttonText: 'Otvori na TikToku',
+      ),
     );
   }
 
@@ -136,7 +157,17 @@ Widget? buildEmbed(BuildContext context, dynamic element) {
     final id = RegExp(r'(?:youtube(?:-nocookie)?\.com/embed/|youtu\.be/|[?&]v=)([\w-]{11})')
         .firstMatch(src)
         ?.group(1);
-    if (id != null) return YouTubeCard(videoId: id);
+    if (id != null) {
+      return LiveEmbed(
+        embedHtml: '<iframe src="https://www.youtube.com/embed/$id?playsinline=1&rel=0" '
+            'allow="accelerometer; autoplay; clipboard-write; encrypted-media; '
+            'gyroscope; picture-in-picture; fullscreen" allowfullscreen '
+            'referrerpolicy="strict-origin-when-cross-origin"></iframe>',
+        aspectRatio: 16 / 9,
+        dark: dark,
+        fallback: YouTubeCard(videoId: id),
+      );
+    }
   }
 
   return null;
