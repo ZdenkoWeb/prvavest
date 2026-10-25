@@ -4,6 +4,7 @@ import 'package:flutter/scheduler.dart';
 import 'api.dart';
 import 'config.dart';
 import 'models.dart';
+import 'nav.dart';
 import 'theme.dart';
 import 'widgets.dart';
 
@@ -63,7 +64,22 @@ class _TopBar extends StatelessWidget {
               ),
             ),
           ),
-          const PrvaVestLogo(height: 21),
+          // Dodir na logo vraća na Naslovnu, kao na sajtu.
+          Semantics(
+            button: true,
+            label: 'Naslovna',
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () {
+                homeTab.value = 0;
+                Navigator.of(context).popUntil((route) => route.isFirst);
+              },
+              child: const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                child: PrvaVestLogo(height: 21),
+              ),
+            ),
+          ),
           Align(
             alignment: Alignment.centerRight,
             child: Padding(
