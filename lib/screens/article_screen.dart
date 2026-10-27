@@ -45,6 +45,7 @@ class ArticleScreen extends StatelessWidget {
                     post.title,
                     style: TextStyle(
                       fontFamily: kSerif,
+                      fontFamilyFallback: kSerifFallback,
                       fontSize: 29,
                       height: 1.17,
                       fontWeight: FontWeight.w800,
@@ -85,6 +86,7 @@ class ArticleScreen extends StatelessWidget {
                     post.content,
                     textStyle: TextStyle(
                       fontFamily: kSerif,
+                      fontFamilyFallback: kSerifFallback,
                       fontSize: 18 * scale,
                       height: 1.65,
                       color: ink,
@@ -252,6 +254,7 @@ class _Tags extends StatelessWidget {
   Widget build(BuildContext context) {
     final style = TextStyle(
       fontFamily: kSerif,
+      fontFamilyFallback: kSerifFallback,
       fontSize: 18,
       height: 1.6,
       fontWeight: FontWeight.w800,
@@ -480,6 +483,7 @@ class _SizeButton extends StatelessWidget {
               label,
               style: TextStyle(
                 fontFamily: kSerif,
+                fontFamilyFallback: kSerifFallback,
                 fontSize: fontSize,
                 fontWeight: FontWeight.w800,
                 color: onTap == null ? context.line : context.ink,
@@ -539,6 +543,7 @@ class _RelatedPostsState extends State<_RelatedPosts> {
               'Pročitajte još',
               style: TextStyle(
                 fontFamily: kSerif,
+                fontFamilyFallback: kSerifFallback,
                 fontSize: 24,
                 fontWeight: FontWeight.w800,
                 color: context.ink,

@@ -6,6 +6,10 @@ import 'config.dart';
 /// Pismo sa serifima za naslove (kao na sajtu).
 const String kSerif = 'serif';
 
+/// Rezerva za pismo sa serifima: Android ima "serif", a iPhone ne, pa
+/// tamo koristi Georgia / Times New Roman (da naslovi izgledaju isto).
+const List<String> kSerifFallback = ['Georgia', 'Times New Roman', 'Noto Serif'];
+
 /// Svetla / tamna tema (dugme sa suncem u zaglavlju).
 /// Izbor se pamti u telefonu.
 class ThemeController extends ValueNotifier<ThemeMode> {

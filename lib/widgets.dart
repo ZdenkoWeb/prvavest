@@ -338,6 +338,7 @@ class SectionTitle extends StatelessWidget {
             text,
             style: TextStyle(
               fontFamily: kSerif,
+              fontFamilyFallback: kSerifFallback,
               fontSize: 24,
               fontWeight: FontWeight.w800,
               color: context.ink,
@@ -412,6 +413,7 @@ class HeroPost extends StatelessWidget {
             post.title,
             style: TextStyle(
               fontFamily: kSerif,
+              fontFamilyFallback: kSerifFallback,
               fontSize: 25,
               height: 1.2,
               fontWeight: FontWeight.w800,
@@ -442,6 +444,7 @@ class RowPost extends StatelessWidget {
   Widget build(BuildContext context) {
     final titleStyle = TextStyle(
       fontFamily: kSerif,
+      fontFamilyFallback: kSerifFallback,
       fontSize: 17,
       height: 1.28,
       fontWeight: FontWeight.w800,
@@ -527,6 +530,7 @@ class SiteFooter extends StatelessWidget {
             AppConfig.aboutText,
             style: TextStyle(
               fontFamily: kSerif,
+              fontFamilyFallback: kSerifFallback,
               fontSize: 16,
               height: 1.7,
               color: grey,
@@ -554,7 +558,12 @@ class SiteFooter extends StatelessWidget {
           const SizedBox(height: 22),
           const Text(
             '© Prva Vest. Sva prava zadržana.',
-            style: TextStyle(fontFamily: kSerif, fontSize: 14, color: grey),
+            style: TextStyle(
+              fontFamily: kSerif,
+              fontFamilyFallback: kSerifFallback,
+              fontSize: 14,
+              color: grey,
+            ),
           ),
         ],
       ),

@@ -58,6 +58,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                               : c.name,
                           style: TextStyle(
                             fontFamily: kSerif,
+                            fontFamilyFallback: kSerifFallback,
                             fontSize: 19,
                             fontWeight: FontWeight.w700,
                             color: c.slug == AppConfig.highlightedSlug

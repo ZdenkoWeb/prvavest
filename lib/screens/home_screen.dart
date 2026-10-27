@@ -364,6 +364,7 @@ class _Block extends StatelessWidget {
 
 TextStyle _titleStyle(Color color, double size) => TextStyle(
       fontFamily: kSerif,
+      fontFamilyFallback: kSerifFallback,
       fontSize: size,
       height: 1.25,
       fontWeight: FontWeight.w800,
