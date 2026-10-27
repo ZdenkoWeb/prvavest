@@ -1,0 +1,54 @@
+name: Napravi iOS aplikaciju
+
+# iPhone verzija iz istog koda kao Android. Za sada pravi verziju za
+# iPhone simulator (pregled na appetize.io). Kad bude Apple Developer
+# nalog, ovde se dodaje i prava verzija za App Store / TestFlight.
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  ios:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Pripremi iOS projekat
+        run: |
+          flutter create --org com.prvavest --project-name prvavest --platforms ios .
+          flutter pub add http cached_network_image flutter_widget_from_html_core shared_preferences url_launcher webview_flutter
+          flutter pub add --dev flutter_launcher_icons
+          # Ime aplikacije ispod ikonice na iPhone-u
+          /usr/libexec/PlistBuddy -c "Set :CFBundleDisplayName Prva Vest" ios/Runner/Info.plist
+          /usr/libexec/PlistBuddy -c "Set :CFBundleName Prva Vest" ios/Runner/Info.plist
+
+      - name: Napravi ikonicu
+        run: |
+          cat > ikonica_ios.yaml <<'KRAJ'
+          flutter_launcher_icons:
+            android: false
+            ios: true
+            image_path: "assets/icon/icon.png"
+            remove_alpha_ios: true
+          KRAJ
+          dart run flutter_launcher_icons -f ikonica_ios.yaml
+
+      - name: Proveri kod
+        run: flutter analyze --no-fatal-infos --no-fatal-warnings
+
+      - name: Napravi iPhone verziju za pregled (simulator)
+        run: |
+          flutter build ios --simulator --debug
+          cd build/ios/iphonesimulator
+          zip -qry "$GITHUB_WORKSPACE/prva-vest-iphone-pregled.zip" Runner.app
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: prva-vest-iphone-pregled
+          path: prva-vest-iphone-pregled.zip
