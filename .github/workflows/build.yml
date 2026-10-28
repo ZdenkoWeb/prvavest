@@ -38,10 +38,16 @@ jobs:
       - name: Proveri kod
         run: flutter analyze --no-fatal-infos --no-fatal-warnings
 
-      - name: Napravi APK
-        run: flutter build apk --release
+      # Broj verzije raste sam sa svakom izgradnjom (Google Play
+      # odbija fajl čiji broj nije veći od prethodnog).
+      - name: Napravi APK i AAB (za Google Play)
+        run: |
+          flutter build apk --release \
+            --build-number=${{ github.run_number }} --build-name=1.0.${{ github.run_number }}
+          flutter build appbundle --release \
+            --build-number=${{ github.run_number }} --build-name=1.0.${{ github.run_number }}
 
-      - name: Potpiši APK stalnim ključem
+      - name: Potpiši APK i AAB stalnim ključem
         env:
           KLJUC: ${{ secrets.KLJUC }}
           LOZINKA: ${{ secrets.LOZINKA }}
@@ -57,9 +63,20 @@ jobs:
             --ks kljuc.jks --ks-key-alias prvavest \
             --ks-pass env:LOZINKA --key-pass env:LOZINKA "$APK"
           "$ANDROID_HOME/build-tools/$BT/apksigner" verify --print-certs "$APK"
+          # AAB za Google Play: skidamo probni potpis i potpisujemo našim ključem
+          AAB=build/app/outputs/bundle/release/app-release.aab
+          zip -q -d "$AAB" 'META-INF/*.SF' 'META-INF/*.RSA' 'META-INF/*.DSA' 'META-INF/*.EC' 'META-INF/MANIFEST.MF' || true
+          jarsigner -keystore kljuc.jks -storepass:env LOZINKA -keypass:env LOZINKA \
+            -sigalg SHA256withRSA -digestalg SHA-256 "$AAB" prvavest
+          jarsigner -verify "$AAB" | tail -1
           rm -f kljuc.jks
 
       - uses: actions/upload-artifact@v4
         with:
           name: prva-vest-apk
           path: build/app/outputs/flutter-apk/app-release.apk
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: prva-vest-aab-za-google-play
+          path: build/app/outputs/bundle/release/app-release.aab
