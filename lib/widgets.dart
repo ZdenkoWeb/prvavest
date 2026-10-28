@@ -57,9 +57,9 @@ Future<void> openLink(BuildContext context, String url) async {
   }
 }
 
-/// Ime kategorije onako kako se prikazuje u traci (#Izbori2026, SRBIJA...).
+/// Ime kategorije onako kako se prikazuje u traci (#Kolumne, SRBIJA...).
 String chipLabel(Category c) => c.slug == AppConfig.highlightedSlug
-    ? '#${c.name.replaceAll(' ', '')}'
+    ? AppConfig.highlightedLabel
     : c.name.toUpperCase();
 
 // ---------------------------------------------------------------------------
