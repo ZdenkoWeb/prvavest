@@ -19,13 +19,16 @@ class AppConfig {
   /// Tamnoplava boja naslova, kao na sajtu.
   static const Color inkColor = Color(0xFF141938);
 
-  /// Kategorija koja se ističe narandžastim okvirom (#Izbori2026).
-  static const String highlightedSlug = 'izbori-2026';
+  /// Kategorija koja se ističe narandžastim okvirom na početku trake.
+  static const String highlightedSlug = 'kolumna';
+
+  /// Natpis na tom narandžastom dugmetu.
+  static const String highlightedLabel = '#Kolumne';
 
   /// Kategorije u traci ispod logoa, tim redosledom (kao na sajtu).
   /// Ovo su "slug"-ovi kategorija (deo adrese posle /kategorija/).
   static const List<String> categorySlugs = [
-    'izbori-2026',
+    'kolumna',
     'srbija',
     'drustvo',
     'politika',
@@ -35,7 +38,7 @@ class AppConfig {
     'hronika',
     'beograd',
     'tehnologija',
-    'kolumna',
+    'izbori-2026',
     'recepti',
   ];
 
