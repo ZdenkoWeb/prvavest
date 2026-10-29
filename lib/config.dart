@@ -49,6 +49,16 @@ class AppConfig {
       'teme, sport i informacije koje privlače pažnju javnosti — brzo, jasno '
       'i direktno.';
 
+  /// Kontakt podaci (ekran "Kontakt" i dno ekrana).
+  static const String contactEmail = 'info@prvavest.com';
+  static const String newsroomEmail = 'redakcija@prvavest.com';
+  static const String publisherName = 'Prva Vest';
+  static const String publisherCompany =
+      'Baltazar PRB LLC, 30 N Gould St Ste R, Sheridan, WY 82801, USA';
+  static const String contactPageUrl = '$siteUrl/kontakt/';
+  static const String impressumUrl = '$siteUrl/impresum/';
+  static const String privacyUrl = '$siteUrl/politika-privatnosti/';
+
   /// Koliko vesti se učitava odjednom.
   static const int pageSize = 20;
 }

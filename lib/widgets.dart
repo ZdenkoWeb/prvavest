@@ -8,6 +8,7 @@ import 'models.dart';
 import 'saved_store.dart';
 import 'screens/article_screen.dart';
 import 'screens/categories_screen.dart';
+import 'screens/contact_screen.dart';
 import 'screens/search_screen.dart';
 import 'theme.dart';
 
@@ -553,6 +554,45 @@ class SiteFooter extends StatelessWidget {
                 SizedBox(width: 6),
                 Icon(Icons.open_in_new, color: Colors.white, size: 16),
               ]),
+            ),
+          ),
+          const SizedBox(height: 18),
+          const Text(
+            'KONTAKT',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 14,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 1.2,
+            ),
+          ),
+          const SizedBox(height: 6),
+          InkWell(
+            onTap: () => openLink(context, 'mailto:${AppConfig.contactEmail}'),
+            child: const Padding(
+              padding: EdgeInsets.symmetric(vertical: 6),
+              child: Row(mainAxisSize: MainAxisSize.min, children: [
+                Icon(Icons.mail_outline, color: Colors.white, size: 18),
+                SizedBox(width: 8),
+                Text(
+                  AppConfig.contactEmail,
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ]),
+            ),
+          ),
+          InkWell(
+            onTap: () => openContact(context),
+            child: const Padding(
+              padding: EdgeInsets.symmetric(vertical: 6),
+              child: Text(
+                'Kontakt i impresum ›',
+                style: TextStyle(color: grey, fontSize: 15),
+              ),
             ),
           ),
           const SizedBox(height: 22),

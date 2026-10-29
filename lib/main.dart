@@ -9,6 +9,7 @@ import 'models.dart';
 import 'nav.dart';
 import 'saved_store.dart';
 import 'screens/categories_screen.dart';
+import 'screens/contact_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/saved_screen.dart';
 import 'theme.dart';
@@ -177,6 +178,21 @@ class _AppDrawer extends StatelessWidget {
                         onTap: () {
                           Scaffold.of(context).closeDrawer();
                           openSearch(context);
+                        },
+                      ),
+                      ListTile(
+                        leading: Icon(Icons.mail_outline, color: context.ink),
+                        title: Text(
+                          'Kontakt',
+                          style: TextStyle(color: context.ink),
+                        ),
+                        subtitle: Text(
+                          AppConfig.contactEmail,
+                          style: TextStyle(color: context.muted),
+                        ),
+                        onTap: () {
+                          Scaffold.of(context).closeDrawer();
+                          openContact(context);
                         },
                       ),
                       ListTile(
